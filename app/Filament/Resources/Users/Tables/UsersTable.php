@@ -19,9 +19,6 @@ class UsersTable
                 TextColumn::make('email')
                     ->label('Email address')
                     ->searchable(),
-                TextColumn::make('email_verified_at')
-                    ->dateTime()
-                    ->sortable(),
                 TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()
@@ -32,7 +29,8 @@ class UsersTable
                     ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('role')
                     ->searchable(),
-                TextColumn::make('department_id')
+                TextColumn::make('department.name')
+                    ->label('Department')
                     ->numeric()
                     ->sortable(),
             ])
