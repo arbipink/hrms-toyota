@@ -42,6 +42,13 @@ class LeaveRequestForm
                 Textarea::make('reason')
                     ->required()
                     ->columnSpanFull(),
+
+                Textarea::make('admin_comment')
+                    ->label('Admin Note')
+                    ->columnSpanFull()
+                    ->disabled(fn () => ! auth()->user()->isAdmin())
+                    ->dehydrated(fn () => auth()->user()->isAdmin())
+                    ->hidden(fn (?string $operation) => $operation === 'create' && ! auth()->user()->isAdmin()),
             ]);
     }
 }
