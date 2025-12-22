@@ -25,6 +25,7 @@ class AdminPanelProvider extends PanelProvider
     {
         return $panel
             ->default()
+            ->brandName('HRMS Selamat Toyota')
             ->id('admin')
             ->path('')
             ->login()

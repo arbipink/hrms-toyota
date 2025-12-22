@@ -2,9 +2,11 @@
 
 namespace Database\Seeders;
 
-use App\Models\User;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+use App\Models\Department;
+use App\Models\User;
+use App\Models\LeaveRequest;
 
 class DatabaseSeeder extends Seeder
 {
@@ -15,11 +17,46 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // User::factory(10)->create();
+        $departments = [
+            'Human Resources',
+            'IT & Engineering',
+            'Finance',
+            'Marketing',
+            'Sales'
+        ];
+
+        $deptModels = [];
+
+        foreach ($departments as $deptName) {
+            $deptModels[] = Department::create(['name' => $deptName]);
+        }
 
         User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'test@example.com',
+            'name' => 'Super Admin',
+            'email' => 'admin@example.com',
+            'password' => bcrypt('password'),
+            'role' => 'ADMIN',
+            'department_id' => null,
         ]);
+
+        foreach ($deptModels as $department) {
+            User::factory()->create([
+                'name' => $department->name . ' Manager',
+                'email' => strtolower(str_replace([' ', '&'], '', $department->name)) . '_manager@example.com',
+                'role' => 'MANAGER',
+                'department_id' => $department->id,
+            ]);
+
+            $employees = User::factory(5)->create([
+                'role' => 'EMPLOYEE',
+                'department_id' => $department->id,
+            ]);
+
+            foreach ($employees as $employee) {
+                LeaveRequest::factory(rand(1, 3))->create([
+                    'user_id' => $employee->id,
+                ]);
+            }
+        }
     }
 }
