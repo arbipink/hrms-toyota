@@ -27,6 +27,10 @@ class LeaveRequestsTable
                     ->label('Employee')
                     ->searchable()
                     ->sortable()
+                    ->limit(20)
+                    ->wrap()
+                    ->lineClamp(2)
+                    ->tooltip(fn ($record) => $record->admin_comment ? $record->admin_comment : null)
                     ->visible(fn () => auth()->user()->isAdmin()),
                 
                 TextColumn::make('start_date')
@@ -46,11 +50,14 @@ class LeaveRequestsTable
                     }),
                 
                 TextColumn::make('reason')
-                    ->limit(30),
+                    ->limit(35)
+                    ->lineClamp(2)
+                    ->tooltip(fn ($record) => $record->reason ? $record->reason : null)
+                    ->wrap(),
                 
                 TextColumn::make('admin_comment')
                     ->label('Admin Comment')
-                    ->limit(40)
+                    ->limit(35)
                     ->wrap()
                     ->lineClamp(2)
                     ->tooltip(fn ($record) => $record->admin_comment ? $record->admin_comment : null)
@@ -66,9 +73,6 @@ class LeaveRequestsTable
                     ]),
             ])
             ->actions([
-                EditAction::make(),
-                
-                // Approve action - works for PENDING and REJECTED requests
                 Action::make('approve')
                     ->form([
                         Textarea::make('admin_comment')
@@ -101,7 +105,6 @@ class LeaveRequestsTable
                         in_array($record->status, ['PENDING', 'REJECTED'])
                     ),
                 
-                // Reject action - works for PENDING and APPROVED requests
                 Action::make('reject')
                     ->form([
                         Textarea::make('admin_comment')
@@ -133,6 +136,8 @@ class LeaveRequestsTable
                         auth()->user()->isAdmin() && 
                         in_array($record->status, ['PENDING', 'APPROVED'])
                     ),
+
+                EditAction::make(),
             ]);
     }
 }
