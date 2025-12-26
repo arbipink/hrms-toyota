@@ -71,7 +71,7 @@ class AttendancesTable
                     })
                     ->toggleable(),
 
-                TextColumn::make('forgiven_by')
+                TextColumn::make('forgiver.name')
                     ->numeric()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
