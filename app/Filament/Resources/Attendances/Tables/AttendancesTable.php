@@ -8,6 +8,7 @@ use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
+use Filament\Notifications\Notification;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
@@ -17,6 +18,12 @@ class AttendancesTable
     public static function configure(Table $table): Table
     {
         return $table
+            ->modifyQueryUsing(function (Builder $query) {
+                $user = Auth::user();
+                if ($user && ! $user->isAdmin()) {
+                    $query->where('user_id', $user->id);
+                }
+            })
             ->columns([
                 TextColumn::make('user.name')
                     ->searchable(),
@@ -50,36 +57,20 @@ class AttendancesTable
                 IconColumn::make('is_forgiven')
                     ->label('Forgiven')
                     ->boolean()
-                    ->action(
-                        Action::make('toggleForgiveness')
-                            ->visible(fn() => Auth::user()?->isAdmin())
-                            ->modalHeading(fn($record) => $record->is_forgiven 
-                                ? 'Unmark as Forgiven' 
-                                : 'Forgive Lateness'
-                            )
-                            ->requiresConfirmation(fn($record) => $record->is_forgiven)
-                            ->schema(fn($record) => $record->is_forgiven ? [] : [
-                                Textarea::make('forgive_reason')
-                                    ->label('Reason for forgiveness')
-                                    ->required()
-                                    ->rows(3),
-                            ])
-                            ->action(function ($record, array $data) {
-                                if ($record->is_forgiven) {
-                                    $record->update([
-                                        'is_forgiven' => false,
-                                        'forgiven_by' => null,
-                                        'forgive_reason' => null,
-                                    ]);
-                                } else {
-                                    $record->update([
-                                        'is_forgiven' => true,
-                                        'forgiven_by' => Auth::id(),
-                                        'forgive_reason' => $data['forgive_reason'],
-                                    ]);
-                                }
-                            })
-                    ),
+                    ->sortable(),
+
+                TextColumn::make('forgive_reason')
+                    ->label('Reason')
+                    ->limit(50)
+                    ->tooltip(function (TextColumn $column): ?string {
+                        $state = $column->getState();
+                        if (strlen($state) <= 50) {
+                            return null;
+                        }
+                        return $state;
+                    })
+                    ->toggleable(),
+
                 TextColumn::make('forgiven_by')
                     ->numeric()
                     ->sortable()
@@ -127,9 +118,55 @@ class AttendancesTable
                         }
                     }),
             ])
-            ->persistFiltersInSession()
             ->recordActions([
-                //
+                Action::make('forgive')
+                    ->label('Forgive')
+                    ->icon('heroicon-o-check-circle')
+                    ->color('success')
+                    ->modalHeading('Forgive Lateness')
+                    ->modalSubmitActionLabel('Forgive')
+                    ->visible(fn($record) => Auth::user()?->isAdmin() && !$record->is_forgiven)
+                    ->schema([
+                        Textarea::make('forgive_reason')
+                            ->label('Reason for forgiveness (Optional)')
+                            ->placeholder('Explain why this lateness is forgiven...')
+                            ->rows(3)
+                            ->maxLength(500),
+                    ])
+                    ->action(function ($record, array $data) {
+                        $record->update([
+                            'is_forgiven' => true,
+                            'forgiven_by' => Auth::id(),
+                            'forgive_reason' => $data['forgive_reason'] ?? null,
+                        ]);
+
+                        Notification::make()
+                            ->title('Attendance Forgiven')
+                            ->success()
+                            ->send();
+                    }),
+
+                Action::make('unforgive')
+                    ->label('Unmark Forgiven')
+                    ->icon('heroicon-o-arrow-uturn-left')
+                    ->color('danger')
+                    ->modalHeading('Unmark as Forgiven')
+                    ->modalDescription('Are you sure you want to revert this? The record will be marked as late/absent again.')
+                    ->modalSubmitActionLabel('Unmark')
+                    ->visible(fn($record) => Auth::user()?->isAdmin() && $record->is_forgiven)
+                    ->requiresConfirmation()
+                    ->action(function ($record) {
+                        $record->update([
+                            'is_forgiven' => false,
+                            'forgiven_by' => null,
+                            'forgive_reason' => null,
+                        ]);
+
+                        Notification::make()
+                            ->title('Forgiveness Reverted')
+                            ->warning()
+                            ->send();
+                    }),
             ]);
     }
 }

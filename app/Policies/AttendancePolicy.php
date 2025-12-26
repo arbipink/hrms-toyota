@@ -21,7 +21,7 @@ class AttendancePolicy
      */
     public function view(User $user, Attendance $attendance): bool
     {
-        return false;
+        return $user->isAdmin() || $user->id === $attendance->user_id;
     }
 
     /**
