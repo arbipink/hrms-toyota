@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('fines', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained()->cascadeOnDelete();
-            $table->foreignId('attendance_id')->constrained()->cascadeOnDelete(); 
+            $table->foreignId('attendance_id')->nullable()->constrained()->nullOnDelete(); 
             $table->decimal('amount', 10, 2);
             $table->string('reason');
             $table->timestamps();

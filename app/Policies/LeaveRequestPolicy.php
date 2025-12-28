@@ -21,7 +21,7 @@ class LeaveRequestPolicy
      */
     public function view(User $user, LeaveRequest $leaveRequest): bool
     {
-        return $user->isAdmin() || $leave->user_id === $user->id;
+        return $user->isAdmin() || $leaveRequest->user_id === $user->id;
     }
 
     /**

@@ -66,13 +66,6 @@ class DatabaseSeeder extends Seeder
                     'date' => $date->format('Y-m-d'),
                 ]);
 
-                Fine::create([
-                    'user_id' => $user->id,
-                    'attendance_id' => $attendance->id,
-                    'amount' => 50000,
-                    'reason' => 'Absent without leave',
-                ]);
-
             } else {
                 $attendance = Attendance::factory()->create([
                     'user_id' => $user->id,
@@ -85,13 +78,6 @@ class DatabaseSeeder extends Seeder
                             'is_forgiven' => true,
                             'forgiven_by' => $admin->id,
                             'forgive_reason' => 'Public Transport Delay (Verified)',
-                        ]);
-                    } else {
-                        Fine::create([
-                            'user_id' => $user->id,
-                            'attendance_id' => $attendance->id,
-                            'amount' => 50000,
-                            'reason' => "Late arrival ({$attendance->late_minutes} minutes)",
                         ]);
                     }
                 }
