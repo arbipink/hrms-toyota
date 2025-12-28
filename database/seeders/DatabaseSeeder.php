@@ -7,6 +7,7 @@ use App\Models\Department;
 use App\Models\User;
 use App\Models\LeaveRequest;
 use App\Models\Attendance;
+use App\Models\Fine; //
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
 
@@ -60,22 +61,39 @@ class DatabaseSeeder extends Seeder
             if ($date->isWeekend()) continue;
 
             if (rand(1, 100) <= 5) {
-                Attendance::factory()->absent()->create([
+                $attendance = Attendance::factory()->absent()->create([
                     'user_id' => $user->id,
                     'date' => $date->format('Y-m-d'),
                 ]);
+
+                Fine::create([
+                    'user_id' => $user->id,
+                    'attendance_id' => $attendance->id,
+                    'amount' => 50000,
+                    'reason' => 'Absent without leave',
+                ]);
+
             } else {
                 $attendance = Attendance::factory()->create([
                     'user_id' => $user->id,
                     'date' => $date->format('Y-m-d'),
                 ]);
 
-                if ($attendance->status === 'LATE' && rand(1, 100) <= 20) {
-                    $attendance->update([
-                        'is_forgiven' => true,
-                        'forgiven_by' => $admin->id,
-                        'forgive_reason' => 'Public Transport Delay (Verified)',
-                    ]);
+                if ($attendance->status === 'LATE') {
+                    if (rand(1, 100) <= 20) {
+                        $attendance->update([
+                            'is_forgiven' => true,
+                            'forgiven_by' => $admin->id,
+                            'forgive_reason' => 'Public Transport Delay (Verified)',
+                        ]);
+                    } else {
+                        Fine::create([
+                            'user_id' => $user->id,
+                            'attendance_id' => $attendance->id,
+                            'amount' => 50000,
+                            'reason' => "Late arrival ({$attendance->late_minutes} minutes)",
+                        ]);
+                    }
                 }
             }
         }
