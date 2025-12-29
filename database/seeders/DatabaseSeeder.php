@@ -127,7 +127,7 @@ class DatabaseSeeder extends Seeder
         Fine::create([
             'user_id' => $user->id,
             'attendance_id' => $attendance->id,
-            'amount' => 100.00,
+            'amount' => 100000,
             'reason' => 'Unexcused Absence on ' . $date->format('d M Y'),
         ]);
     }
@@ -161,7 +161,7 @@ class DatabaseSeeder extends Seeder
             Fine::create([
                 'user_id' => $user->id,
                 'attendance_id' => $attendance->id,
-                'amount' => 50.00,
+                'amount' => 50000,
                 'reason' => "Late arrival ({$lateMinutes} mins) exceeded threshold.",
             ]);
         }
