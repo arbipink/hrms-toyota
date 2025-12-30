@@ -58,6 +58,11 @@ class User extends Authenticatable
         return $this->hasMany(LeaveRequest::class);
     }
 
+    public function attendances()
+    {
+        return $this->hasMany(Attendance::class);
+    }
+
     public function isAdmin()
     {
         return $this->role == "ADMIN";
