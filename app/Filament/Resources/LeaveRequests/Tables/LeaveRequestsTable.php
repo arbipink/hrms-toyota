@@ -12,6 +12,7 @@ use Filament\Tables\Table;
 use Filament\Forms\Components\Textarea;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class LeaveRequestsTable
 {
@@ -141,6 +142,18 @@ class LeaveRequestsTable
                         Auth::user()->isAdmin() &&
                             $record->status !== 'PENDING'
                     ),
+
+                Action::make('download_pdf')
+                    ->label('Download Permit')
+                    ->icon('heroicon-o-document-arrow-down')
+                    ->color('info')
+                    ->action(function (LeaveRequest $record) {
+                        return response()->streamDownload(function () use ($record) {
+                            echo Pdf::loadView('pdf.leave-request', ['record' => $record])
+                                ->stream();
+                        }, 'leave-permit-' . $record->id . '.pdf');
+                    })
+                    ->visible(fn (LeaveRequest $record) => $record->status === 'APPROVED'),
             ]);
     }
 }
